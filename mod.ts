@@ -6,7 +6,24 @@ type DetachedPromise<T> = {
     promiseReject: (value: T | PromiseLike<T>) => void;
     promise: Promise<T>;
 };
-
+/**
+ * a pool of tasks ensuring maximum concurrent tasks running is less than the size
+ * @param size maximum concurrent tasks
+ * 
+ * @example
+ * const pool = new Pool(5);
+ * const urls = [
+ *     "https://www.google.com/1",
+ *     "https://www.google.com/2",
+ *     "https://www.google.com/3",
+ *     "https://www.google.com/4",
+ *     "https://www.google.com/5",
+ *     "https://www.google.com/6",
+ *     "https://www.google.com/7",
+ * ];
+ * // here maximum concurrent url being fetched is 5
+ * await Promise.all(urls.map((u) => pool.exec(() => fetch(u))));
+ */
 export class Pool {
     private workingCount = 0;
     private waitQueue: Queue<DetachedPromise<void>> = new Queue();
@@ -15,7 +32,11 @@ export class Pool {
             throw new Error("Pool size must be greater than 0");
         }
     }
-
+    /**
+     * execute a task in pool
+     * @param task task to run
+     * @returns promise that resolves when the task is done or rejects if task rejects
+     */
     public async exec<T>(task: Task<T>): Promise<T> {
         const detachedPromise = this.createPromise<T>();
         if (this.workingCount < this.size) {
@@ -45,13 +66,24 @@ export class Pool {
                 promiseReject(e);
             });
     }
-
+    /**
+     * returns the size passed on constructor ( maximum concurrent tasks )
+     * @returns
+     */
     public getSize(): number {
         return this.size;
     }
+    /**
+     * returns the number of working tasks
+     * @returns number of working tasks
+     */
     public getWorkingCount(): number {
         return this.workingCount;
     }
+    /**
+     * returns the number of pending tasks
+     * @returns number of pending tasks
+     */
     public getPendingCount(): number {
         return this.waitQueue.size;
     }
