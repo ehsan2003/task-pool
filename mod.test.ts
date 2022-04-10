@@ -76,8 +76,6 @@ Deno.test("it should increase working if a task is running", async () => {
   assertEquals(pool.getPendingCount(), 0);
   assertEquals(pool.getWorkingCount(), 1);
   await p;
-  // waiting for next microtask
-  await Promise.resolve();
   assertEquals(pool.getPendingCount(), 0);
   assertEquals(pool.getWorkingCount(), 0);
 });
