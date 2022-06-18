@@ -1,5 +1,4 @@
 type Task<T> = () => Promise<T>;
-import Queue from "https://esm.sh/yocto-queue@1.0.0";
 
 type DetachedPromise<T> = {
   promiseResolve: (value: T | PromiseLike<T>) => void;
@@ -85,7 +84,7 @@ export class Pool {
    * @returns number of pending tasks
    */
   public getPendingCount(): number {
-    return this.waitQueue.size;
+    return this.waitQueue.getSize();
   }
   private increaseExecuting() {
     this.workingCount++;
@@ -108,5 +107,63 @@ export class Pool {
     });
     // deno-lint-ignore no-explicit-any
     return { promiseResolve, promiseReject, promise } as any;
+  }
+}
+
+type Node<T> = {
+  value: T;
+  next: Node<T> | null;
+};
+export default class Queue<T> {
+  private head: Node<T> | null = null;
+  private tail: Node<T> | null = null;
+  private size = 0;
+
+  constructor() {
+    this.clear();
+  }
+
+  enqueue(value: T) {
+    const node = { value, next: null };
+
+    if (this.head) {
+      this.tail!.next = node;
+      this.tail = node;
+    } else {
+      this.head = node;
+      this.tail = node;
+    }
+
+    this.size++;
+  }
+
+  dequeue() {
+    const current = this.head;
+    if (!current) {
+      return;
+    }
+
+    this.head = this.head!.next;
+    this.size--;
+    return current.value;
+  }
+
+  clear() {
+    this.head = null;
+    this.tail = null;
+    this.size = 0;
+  }
+
+  getSize() {
+    return this.size;
+  }
+
+  *[Symbol.iterator]() {
+    let current = this.head;
+
+    while (current) {
+      yield current.value;
+      current = current.next;
+    }
   }
 }
