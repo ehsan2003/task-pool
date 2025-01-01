@@ -1,4 +1,4 @@
-import { FIFOQueue } from "./FIFOQueue";
+import { FIFOQueue } from "./FIFOQueue.ts";
 
 type Task<T> = () => Promise<T>;
 
